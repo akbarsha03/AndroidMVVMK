@@ -7,30 +7,33 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProviders
+import androidx.activity.viewModels
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.observe
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import com.examz.testapp.R
-import com.examz.testapp.data.api.ApiHelper
-import com.examz.testapp.data.api.RetrofitBuilder
 import com.examz.testapp.data.model.Breed
 import com.examz.testapp.data.model.BreedWithImage
-import com.examz.testapp.ui.base.ViewModelFactory
 import com.examz.testapp.ui.detail.viewmodel.DetailViewModel
 import com.examz.testapp.ui.main.adapter.BREED_ID
 import com.examz.testapp.utils.Resource
 import com.examz.testapp.utils.Status
+import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.android.synthetic.main.activity_detail.*
-import kotlinx.android.synthetic.main.content_main.*
+import javax.inject.Inject
 
 
-public class DetailActivity : AppCompatActivity(R.layout.activity_detail) {
+class DetailActivity : DaggerAppCompatActivity(R.layout.activity_detail) {
 
-    private lateinit var viewModel: DetailViewModel
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+
+    private val viewModel by viewModels<DetailViewModel> { viewModelFactory }
+
     private var breedID: String = ""
 
     companion object {
@@ -50,13 +53,12 @@ public class DetailActivity : AppCompatActivity(R.layout.activity_detail) {
             breedID = it.getString(BREED_ID).toString()
         }
 
-        setupViewModel()
         setupObservers(breedID)
     }
 
     private fun setupObservers(breedID: String?) {
-        viewModel.getBreedByID(breedID ?: "").observe(this, {
-            it?.let { resource ->
+        viewModel.getBreedByID(breedID ?: "").observe(this) {
+            it.let { resource ->
                 when (resource.status) {
                     Status.SUCCESS -> {
                         resource.data?.let(this@DetailActivity::onDataReceived)
@@ -66,14 +68,14 @@ public class DetailActivity : AppCompatActivity(R.layout.activity_detail) {
                     }
                 }
             }
-        })
+        }
     }
 
     private fun onDataReceived(breed: Breed) {
         cat_info.text = breed.description
 
-        viewModel.getBreedImage(breed.referenceImageId).observe(this, {
-            it?.let { resource ->
+        viewModel.getBreedImage(breed.referenceImageId).observe(this) {
+            it.let { resource ->
                 when (resource.status) {
                     Status.SUCCESS -> {
                         loadCatImage(resource)
@@ -87,7 +89,7 @@ public class DetailActivity : AppCompatActivity(R.layout.activity_detail) {
                     }
                 }
             }
-        })
+        }
     }
 
     private fun loadCatImage(resource: Resource<BreedWithImage>) {
@@ -115,11 +117,5 @@ public class DetailActivity : AppCompatActivity(R.layout.activity_detail) {
                     return false
                 }
             }).into(cat_image_view)
-    }
-
-
-    private fun setupViewModel() {
-        val factory = ViewModelFactory(ApiHelper(RetrofitBuilder.apiService))
-        viewModel = ViewModelProviders.of(this, factory).get(DetailViewModel::class.java)
     }
 }

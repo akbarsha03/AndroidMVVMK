@@ -8,8 +8,10 @@ import com.examz.testapp.data.model.BreedWithImage
 import com.examz.testapp.data.repository.DetailRepository
 import com.examz.testapp.utils.Resource
 import kotlinx.coroutines.Dispatchers
+import javax.inject.Inject
 
-class DetailViewModel(private val detailRepository: DetailRepository) : ViewModel() {
+class DetailViewModel @Inject constructor(private val detailRepository: DetailRepository) :
+    ViewModel() {
     fun getBreedByID(id: String): LiveData<Resource<Breed>> {
         return liveData(Dispatchers.IO) {
             emit(Resource.loading(data = null))

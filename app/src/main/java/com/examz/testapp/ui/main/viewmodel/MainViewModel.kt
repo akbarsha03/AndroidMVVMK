@@ -7,8 +7,9 @@ import com.examz.testapp.data.model.Breed
 import com.examz.testapp.data.repository.MainRepository
 import com.examz.testapp.utils.Resource
 import kotlinx.coroutines.Dispatchers
+import javax.inject.Inject
 
-class MainViewModel(private val mainRepository: MainRepository) : ViewModel() {
+class MainViewModel @Inject constructor(private val mainRepository: MainRepository) : ViewModel() {
     fun getBreeds(limit: Int = 10, page: Int = 1): LiveData<Resource<List<Breed>>> {
         return liveData(Dispatchers.IO) {
             emit(Resource.loading(data = null))
